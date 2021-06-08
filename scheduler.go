@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 	"time"
 )
 
 type Scheduler struct {
+	c chan time.Time
 }
 
 func (s Scheduler) Wait(ctx context.Context, wg *sync.WaitGroup, t time.Time) {
@@ -21,19 +21,21 @@ func (s Scheduler) Wait(ctx context.Context, wg *sync.WaitGroup, t time.Time) {
 			return
 		default:
 		}
+		// 現在時刻を受けとった時間がすぎていたら
 		if time.Now().After(t) {
+			s.c <- t // チャネルに値をセット セット後、Remindのチャネルの処理が行われる
 			cancel()
 			wg.Done()
 		}
 	}
 }
 
-func (s Scheduler) Remind(ctx context.Context) error {
-	select {
-	case <-ctx.Done():
-		return nil
-	default:
+func (s Scheduler) Remind(ctx context.Context) {
+	for {
+		select {
+		case t := <-s.c:
+			fmt.Println("Remind", t)
+		default:
+		}
 	}
-	fmt.Println(num)
-	return nil
 }
