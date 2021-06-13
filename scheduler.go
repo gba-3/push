@@ -33,6 +33,8 @@ func (s Scheduler) Wait(ctx context.Context, wg *sync.WaitGroup, t time.Time) {
 func (s Scheduler) Remind(ctx context.Context) {
 	for {
 		select {
+		case <-ctx.Done():
+			return
 		case t := <-s.c:
 			fmt.Println("Remind", t)
 		default:
